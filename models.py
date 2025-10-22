@@ -1,8 +1,6 @@
 from datetime import datetime, time, timedelta
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.ext.mutable import MutableList
-from sqlalchemy.dialects.postgresql import JSON
 
 db = SQLAlchemy()
 
@@ -20,32 +18,32 @@ class User(db.Model):
             "stanowisko": self.Stanowisko
         }
 
-    def auth(self, login, password):
-        user = User.query.filter_by(Login=login).first()
-        if user is not None and user.Password == password:
-            return True
-        return False
+def auth(login, password):
+    user = User.query.filter_by(Login=login).first()
+    if user is not None and user.Password == password:
+        return True
+    return False
 
 
-    def addUser(self, login, password, name, stanowisko):
-        try:
-            new_user = User(
-                Login=login,
-                Password=password,
-                Name=name,
-                Stanowisko=stanowisko
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            return {"message": "User added successfully"}
-        except Exception as e:
-            db.session.rollback()
-            return {"error": str(e)}
+def addUser(login, password, name, stanowisko):
+    try:
+        new_user = User(
+            Login=login,
+            Password=password,
+            Name=name,
+            Stanowisko=stanowisko
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        return {"message": "User added successfully"}
+    except Exception as e:
+        db.session.rollback()
+        return {"error": str(e)}
 
 
 
 class Report(db.Model):
-    Login = db.Column(db.String, db.ForeignKey('user.login'), primary_key=True)
+    Login = db.Column(db.String, db.ForeignKey('user.Login'), primary_key=True)
     Data = db.Column(db.Date, primary_key=True)
     GodzinaStart = db.Column(db.Time, nullable=False)
     GodzinaKoniec = db.Column(db.Time, nullable=True)

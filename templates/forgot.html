@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forgot Your Password</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2d3e50;
+            color: white;
+            padding: 12px 24px;
+        }
+
+        .navbar .left-buttons button {
+            background: #4a90e2;
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            margin-right: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .navbar .left-buttons button:hover {
+            background: #357abd;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            padding: 32px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        input[type="email"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 16px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4a90e2;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+        }
+
+        .message.success {
+            color: #28a745;
+        }
+
+        .message.error {
+            color: #dc3545;
+        }
+
+        .extra-links {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .extra-links a {
+            color: #4a90e2;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .extra-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Forgot Your Password?</h2>
+        <form id="forgotForm">
+            <label for="email">Enter your email address:</label>
+            <input type="email" id="email" name="email" placeholder="example@mail.com" required>
+            <button type="submit">Send Reset Code</button>
+        </form>
+
+        <div id="message" class="message"></div>
+
+        <div class="extra-links">
+            <a href="/login">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('forgotForm');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            messageDiv.textContent = '';
+            messageDiv.className = 'message';
+
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                messageDiv.textContent = 'Please enter your email.';
+                messageDiv.classList.add('error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/request-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.textContent = data.message || 'Password reset code sent successfully!';
+                    messageDiv.classList.add('success');
+                    form.reset();
+                } else {
+                    messageDiv.textContent = data.error || 'Failed to send reset code.';
+                    messageDiv.classList.add('error');
+                }
+            } catch (err) {
+                messageDiv.textContent = 'An unexpected error occurred.';
+                messageDiv.classList.add('error');
+            }
+        });
+    </script>
+</body>
+</html>

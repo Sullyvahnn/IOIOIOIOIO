@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        /* Top Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2d3e50;
+            color: white;
+            padding: 12px 24px;
+        }
+
+        .navbar .left-buttons button {
+            background: #4a90e2;
+            border: none;
+            color: white;
+            padding: 10px 16px;
+            margin-right: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .navbar .left-buttons button:hover {
+            background: #357abd;
+        }
+
+        .navbar .forgot-password {
+            color: #9fc9ff;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .navbar .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #2d3e50;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .report-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .report-btn:hover {
+            background: #1e7e34;
+        }
+
+        .workshift-btn {
+            display: block;
+            width: 220px;
+            margin: 30px auto 0;
+            padding: 12px 20px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .workshift-btn:hover {
+            background: #e68900;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="left-buttons">
+            <button onclick="window.location.href='/login'">Login</button>
+            <button onclick="window.location.href='/register'">Register</button>
+        </div>
+        {% if user_email %}
+          <p>{{ user_email }}</p>
+            {% else %}
+              <p>You are not logged in.</p>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <h2>User List</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Email</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="userTable">
+                <!-- Example rows (you can render with Flask/Jinja2) -->
+                <tr>
+                    <td>1</td>
+                    <td>john@example.com</td>
+                    <td><button class="report-btn">Generate Report</button></td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>mary@example.com</td>
+                    <td><button class="report-btn">Generate Report</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button class="workshift-btn" onclick="registerWorkshift()">Register Workshift</button>
+    </div>
+
+    <script>
+        function registerWorkshift() {
+            alert("Workshift registration form would appear here.");
+        }
+    </script>
+</body>
+</html>
