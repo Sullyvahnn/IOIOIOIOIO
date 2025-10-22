@@ -21,14 +21,26 @@ class User(db.Model):
         }
 
     def auth(self, login, password):
-        return self.Login == login and self.Password == password
+        user = User.query.filter_by(Login=login).first()
+        if user is not None and user.Password == password:
+            return True
+        return False
+
 
     def addUser(self, login, password, name, stanowisko):
-        self.Login = login
-        self.Password = password
-        self.Name = name
-        self.Stanowisko = stanowisko
-
+        try:
+            new_user = User(
+                Login=login,
+                Password=password,
+                Name=name,
+                Stanowisko=stanowisko
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            return {"message": "User added successfully"}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}
 
 
 
@@ -55,13 +67,22 @@ class Report(db.Model):
             "GodzinaKoniec": self.GodzinaKoniec,
             "Projekt": self.Projekt,
         }
-    def startWorking(self, login, projekt):
-        self.Login = login
-        self.Data = datetime.now().date()
-        self.GodzinaStart = time.now().time()
-        self.GodzinaKoniec = None
-        self.Projekt = projekt
 
+    def startWorking(self, login, projekt):
+        try:
+            new_report = Report(
+                login=login,
+                data=datetime.now().date(),
+                godzina_start=datetime.now().time(),
+                godzina_koniec=None,
+                projekt=projekt
+            )
+            db.session.add(new_report)
+            db.session.commit()
+            return {"message": "Work started successfully"}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}
 
     def stopWorking(login):
         try:
