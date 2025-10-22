@@ -38,11 +38,6 @@ def create_app(config_class="config.Config"):
     from app.routes.user import user_bp as user_blueprint
     app.register_blueprint(user_blueprint, url_prefix='/user')
 
-    from app.routes.cabins import cabins_bp as cabins_blueprint
-    app.register_blueprint(cabins_blueprint, url_prefix="/cabins")
-
-    from app.routes.admin import admin_bp as admin_blueprint
-    app.register_blueprint(admin_blueprint, url_prefix='/admin')
 
 
     return app

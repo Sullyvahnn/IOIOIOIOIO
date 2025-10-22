@@ -20,11 +20,11 @@ class User(db.Model):
             "stanowisko": self.Stanowisko
         }
 
-    def auth(self, login, password):
-        user = User.query.filter_by(Login=login).first()
-        if user is not None and user.Password == password:
-            return True
-        return False
+def auth(self, login, password):
+    user = User.query.filter_by(Login=login).first()
+    if user is not None and user.Password == password:
+        return True
+    return False
 
 
     def addUser(self, login, password, name, stanowisko):
@@ -45,7 +45,7 @@ class User(db.Model):
 
 
 class Report(db.Model):
-    Login = db.Column(db.String, db.ForeignKey('user.login'), primary_key=True)
+    Login = db.Column(db.String, db.ForeignKey('user.Login'), primary_key=True)
     Data = db.Column(db.Date, primary_key=True)
     GodzinaStart = db.Column(db.Time, nullable=False)
     GodzinaKoniec = db.Column(db.Time, nullable=True)
