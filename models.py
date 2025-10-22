@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time, timedelta
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.mutable import MutableList
@@ -6,89 +6,104 @@ from sqlalchemy.dialects.postgresql import JSON
 
 db = SQLAlchemy()
 
-
-def is_better_cabin_possible(group_size):
-    available_cabins = db.session.query(Cabin).filter(
-        Cabin.is_locked == False,
-        (Cabin.capacity - Cabin.occupied_places) == group_size
-    ).all()
-    return available_cabins
-
-def get_member_group(member_id):
-    token = db.session.query(User).filter(User.id == member_id).first().groupCode
-    return db.session.query(User).filter(User.groupCode == token).all()
-
-
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    email = db.Column(db.String(50))
-    groupCode = db.Column(db.String(20))
-    is_admin = db.Column(db.Boolean, default=False)
-    cabin_id = db.Column(db.Integer, default=None)
+    Login = db.Column(db.String, primary_key=True)
+    Password = db.Column(db.String(128), nullable=False)
+    Name = db.Column(db.String(50))
+    Stanowisko = db.Column(db.String(50))
 
     def to_dict(self):
         return {
-            "id": self.id,
-            "name": self.name,
-            "email": self.email,
-            "groupCode": self.groupCode,
-            "is_admin": self.is_admin,
-            "cabin_id": self.cabin_id
+            "login": self.Login,
+            "password": self.Password,
+            "name": self.Name,
+            "stanowisko": self.Stanowisko
         }
 
+    def auth(self, login, password):
+        return self.Login == login and self.Password == password
 
-class Cabin(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    capacity = db.Column(db.Integer)
-    occupied_places = db.Column(db.Integer, default=0)
-    members = db.Column(MutableList.as_mutable(JSON), default=list)
-    is_locked = db.Column(db.Boolean, default=True)
-    unlock_time = db.Column(db.DateTime, nullable=True)
+    def addUser(self, login, password, name, stanowisko):
+        self.Login = login
+        self.Password = password
+        self.Name = name
+        self.Stanowisko = stanowisko
+
+
+
+
+class Report(db.Model):
+    Login = db.Column(db.String, db.ForeignKey('user.login'), primary_key=True)
+    Data = db.Column(db.Date, primary_key=True)
+    GodzinaStart = db.Column(db.Time, nullable=False)
+    GodzinaKoniec = db.Column(db.Time, nullable=True)
+    Projekt = db.Column(db.String(100), nullable=False)
+
+    def __init__(self, login, data, godzina_start, godzina_koniec, projekt):
+        self.Login = login
+        self.Data = data
+        self.GodzinaStart = godzina_start
+        self.GodzinaKoniec = godzina_koniec
+        self.Projekt = projekt
+
 
     def to_dict(self):
         return {
-            "id": self.id,
-            "name": self.name,
-            "capacity": self.capacity,
-            "occupied_places": self.occupied_places,
-            "members": self.members,
-            "is_locked": self.is_locked,
-            "unlock_time": self.unlock_time
+            "Login": self.Login,
+            "Data": self.Data,
+            "GodzinaStart": self.GodzinaStart,
+            "GodzinaKoniec": self.GodzinaKoniec,
+            "Projekt": self.Projekt,
         }
-
-    def add_member(self, member_id):
-        group_members = get_member_group(member_id)
-        group_size = len(group_members)
-        free_capacity = self.capacity - self.occupied_places
-
-        if free_capacity < group_size:
-            raise ValueError("Group size exceeds available cabin capacity.")
-
-        if free_capacity != group_size:
-            better_cabins = is_better_cabin_possible(group_size)
-            if better_cabins:
-                raise ValueError(f"Cabins: {better_cabins} are better option")
-
-        for member in group_members:
-            self.members.append(member.id)
-            member.cabin_id = self.id
-            self.occupied_places += 1
-        return None
-
-    def remove_member(self, user_id):
-        group_members = get_member_group(user_id)
-
-        for member in group_members:
-            self.members.remove(member.id) # member not in group?
-            member.cabin_id = None
-            self.occupied_places -= 1
-            #todo obsluzyc przypadki ze zmiana grupy
-        return None
-
-    def check_unlock_condition(self):
-        if self.unlock_time and datetime.utcnow() >= self.unlock_time:
-            self.is_locked = False
+    def startWorking(self, login, projekt):
+        self.Login = login
+        self.Data = datetime.now().date()
+        self.GodzinaStart = time.now().time()
+        self.GodzinaKoniec = None
+        self.Projekt = projekt
 
 
+    def stopWorking(login):
+        try:
+            reports = Report.query.filter_by(Login=login, GodzinaKoniec=None).all()
+
+            for report in reports:
+                report.GodzinaKoniec = time.now().time()
+
+            db.session.commit()
+            return {"message": "Zakończono pracę"}
+        except Exception as e:
+            # Rollback in case of an error
+            db.session.rollback()
+            return {"error": str(e)}
+
+    def closeAllAndReopen(self):
+        try:
+            reports = Report.query.filter_by(GodzinaKoniec=None).all()
+            for report in reports:
+                report.GodzinaKoniec = time.combine( time(23, 59, 59))
+
+                # Open a new report for today
+                new_report = Report(report.Login, report.Data + timedelta(days=1), time(0, 0, 0), None, report.Projekt)
+                db.session.add(new_report)
+
+            db.session.commit()
+            return {"message": "Poprawnie zamknięto wszystkie raporty i otwarto nowe na dzisiaj"}
+        except Exception as e:
+            # Rollback in case of an error
+            db.session.rollback()
+            return {"error": str(e)}
+
+    def get_reports_with_user_data(login):
+        try:
+            # Pobierz raporty, gdzie Login == login
+            reports = Report.query.filter_by(Login=login).all()
+            result = []
+            for report in reports:
+                user = User.query.get(report.Login)
+                report_data = report.to_dict()
+                user_data = user.to_dict() if user else {}
+                result.append({**report_data, **user_data})
+            return result
+        except Exception as e:
+            return {"error": str(e)}
