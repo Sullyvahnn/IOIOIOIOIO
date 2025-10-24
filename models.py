@@ -43,8 +43,9 @@ def addUser(login, password, name, stanowisko):
 
 
 class Report(db.Model):
-    Login = db.Column(db.String, db.ForeignKey('user.Login'), primary_key=True)
-    Data = db.Column(db.Date, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    Login = db.Column(db.String, db.ForeignKey('user.Login'), nullable=False)
+    Data = db.Column(db.Date, nullable=False)
     GodzinaStart = db.Column(db.Time, nullable=False)
     GodzinaKoniec = db.Column(db.Time, nullable=True)
     Projekt = db.Column(db.String(100), nullable=False)
