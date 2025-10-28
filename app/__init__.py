@@ -2,14 +2,13 @@ from flask_jwt_extended import JWTManager
 from flask import Flask, jsonify
 from flask_mail import Mail
 from models import db
-
+from ReportGen import ReportGen
 mail = Mail()
 
 
 def create_app(config_class="config.Config"):
     app = Flask(__name__, template_folder="../templates")
     app.config.from_object(config_class)
-
     jwt = JWTManager(app)
 
     @jwt.unauthorized_loader
